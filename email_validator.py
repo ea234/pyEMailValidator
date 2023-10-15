@@ -78,6 +78,250 @@ def validateEmail( pEingabe = '' ):
 
     aktuelles_zeichen = ' '
 
+    '''
+    Pruefung: Eckige Klammern
+
+    Rudimentaer eingebaut
+        
+    ABC DEF <ABC.DEF@GHI.JKL>
+
+    <ABC.DEF@GHI.JKL> ABC DEF
+
+    Startet die eMail-Adresse mit einer oeffnenden eckigen Klammer, wird 
+    eine schliessende eckige Klammmer gesucht. Von vorne nach hinten.
+
+    Ende die eMail-Adresse mit einer schliessenden eckigen Klammer, wird 
+    eine oeffnende eckige Klammer gesucht. Von hinten nach vorne.
+
+    Wird keine korrospondierende Klammer gefunden, wird die Funktion 
+    mit einem Fehlercode (16 oder 17) beendet.
+
+    Wird die korrospondierende Klammer gefunden, wird die Start- und 
+    Endposition fuer die eigentliche Pruefroutine auf die in den 
+    eckigen Klammern enthaltende eMail-Adresse beschraenkt.
+
+    Der String ausserhalb der eckigen Klammern wird durch eine eigene 
+    While-Schleife geprueft. Hierzu werden vorhandene Variablen 
+    zweckentfremded um nicht mehr Variablen deklarieren zu muessen. 
+    Sind die Zeichen in dem nicht eMail-String OK, werden diese 
+    Variablen wieder auf deren Initialwert von -1 gesetzt. 
+
+    Ist im "nicht eMail-Adress-String" ein ungueltiges Zeichen vorhanden, 
+    wird der Fehler 18 zurueckgegeben. 
+    '''
+
+    aktuelles_zeichen = pEingabe[ laenge_eingabe_string - 1 ]
+    
+    display_string_pos_start = -1
+    display_string_pos_end = -1
+    
+    email_adress_start = 0
+    email_adress_end = laenge_eingabe_string - 1
+
+    '''
+    Pruefung: Ende mit einer schliessenden eckigen Klammer ?
+    '''
+    if ( aktuelles_zeichen == '>' ):
+
+        '''
+        Das letzte Zeichen ist in diesem Fall eine schliessende eckige Klammer.
+        
+        Dieses Zeichen darf von der unten stehende while-Schleife nicht 
+        geprueft werden, da ansonsten ein ungueltiges Zeichen erkannt 
+        werden wuerde.
+        
+        Es wird die BIS-Poisition fuer die eMail-Adress-Pruefschleife um 
+        ein Zeichen vermindert. 
+        '''
+        laenge_eingabe_string -= 1
+
+        '''
+        In einer While-Schleife wird die oefnende eckige Klammer gesucht.
+        Es wird von hinten nach vorne gesucht.
+        '''
+        akt_index = laenge_eingabe_string
+
+        while ( ( akt_index > 0 ) and ( aktuelles_zeichen != '<' ) ):
+        
+            akt_index -= 1
+
+            aktuelles_zeichen = pEingabe[ akt_index ];
+
+        '''
+        Ist das letzte Zeichen eine schliessende eckige Klammer, muss es eine 
+        eckige startende Klammer geben. 
+        
+        Nach der While-Schleife muss in der Variablen "aktuelles_zeichen"
+        die oeffnede eckige Klammer enthalten sein. 
+        
+        Ist es ein anderes Zeichen, stimmt die Struktur nicht.
+        '''
+        if ( aktuelles_zeichen != '<' ):
+            return 16 # Struktur: keine oeffnende eckige Klammer gefunden. 
+
+        '''
+        Bestimmung der Positionen, des seperat zu pruefenden "nicht eMail-Adress-Strings"
+        '''
+        display_string_pos_start = 0
+        display_string_pos_end = akt_index
+        
+        email_adress_start = akt_index
+        email_adress_end = laenge_eingabe_string 
+
+
+        '''
+        Der aktuelle Index steht nun auf der Position der oeffnenden eckigen Klammer. 
+        Das dortige Zeichen wurde geprueft und ist OK, daher wird der Leseprozess 
+        um ein Zeichen weiter gestellt. (Ausserdem Fehlervermeidung Nr. 22 )
+        '''
+        akt_index += 1
+
+    else:
+
+        '''
+        Eingabe endete nicht auf einer schliessenden eckigen Klammer. 
+        Es wird geprueft, ob die Eingabe mit einer eckigen oeffnenden 
+        Klammer startet. 
+        
+        Es wird das aktuelle Zeichen an der Position 0 gelesen.
+        '''
+        aktuelles_zeichen = pEingabe[ akt_index ]
+
+        if ( aktuelles_zeichen == '<' ):
+
+            '''
+            Startet die Eingabe mit einer eckigen oeffnenden Klammer, wird
+            in einer While-Schleife die schliessende eckige Klammer gesucht.
+            Es wird von vorne nach hinten gesucht.
+            '''
+            while ( ( akt_index < ( laenge_eingabe_string - 1 ) ) and ( aktuelles_zeichen != '>' ) ):
+
+                akt_index += 1
+
+                aktuelles_zeichen = pEingabe[ akt_index ]
+
+            '''
+            Ist das erste Zeichen eine oeffnende eckige Klammer, muss es eine 
+            eckige schliessende Klammer geben. 
+            
+            Nach der While-Schleife muss in der Variablen "aktuelles_zeichen"
+            die schliessende eckige Klammer enthalten sein. 
+            
+            Ist es ein anderes Zeichen, stimmt die Struktur nicht.
+            '''
+            if ( aktuelles_zeichen != '>' ):
+                return 17 # Struktur: keine schliessende eckige Klammer gefunden. 
+
+            '''
+            Bestimmung der Positionen, des seperat zu pruefenden "nicht eMail-Adress-Strings"
+            
+            Der zu pruefende String startet nach dem Zeichen hinter der aktuellen Position.
+            Der String endet am Index des letzten Zeichens.
+            '''
+            display_string_pos_start = akt_index + 1
+            display_string_pos_end = laenge_eingabe_string
+
+            email_adress_start = 1
+            email_adress_end = akt_index 
+
+            '''
+            Der Leseprozess muss ein Zeichen vor der gefundenden schliessenden eckigen Klammer enden.
+            Die Laenge des Eingabestrings wird entsprechend angepasst.  
+            '''
+            laenge_eingabe_string = akt_index
+
+            '''
+            Das Zeichen an Position 0 ist die oeffnende eckige Klammer. 
+            Der Leseprozess muss bei Index 1 starten.  
+            '''
+            akt_index = 1
+
+    email_local_part_gesamt_start = akt_index
+
+    email_local_part_start = akt_index
+
+    '''
+    Pruefung: gibt es einen seperat zu pruefenden "nicht eMail-Adress-String" ?
+    '''
+    if ( display_string_pos_start != -1 ):
+        '''
+        Eingabe = "<ABC@DEF.GHI>"
+        
+        Von der Suchroutine wird eine spitze Klammer erkannt. Es wird auch 
+        eine - in diesem Fall - oeffnende Klammer gefunden. 
+        
+        Es wird die Position des letzten Punktes auf 0 gestellt. 
+        Es bleibt jedoch kein "nicht eMail-String" uebrig. 
+        
+        Ist das ein Fehler oder nicht ?
+        Im Moment wird eine solche Eingabe als korrekte eMail-Adresse durchgelassen. 
+        '''
+        #if ( position_letzter_punkt == position_kommentar_ende )
+        #{
+        #  return 19 # Struktur: es gibt keinen "nicht eMail-String" 
+        #}
+
+        temp_index = display_string_pos_start      
+        
+        '''
+        Ueber eine While-Schleife werden die Zeichen im "nicht eMail-Adress-String" geprueft.
+        Wird ein ungueltiges Zeichen erkannt, wir der Fehler 18 zurueckgegeben.
+        '''
+        while ( temp_index < display_string_pos_end ):
+            
+            aktuelles_zeichen = pEingabe[ temp_index ]
+
+            if ( ( ( aktuelles_zeichen >= 'a' ) and ( aktuelles_zeichen <= 'z' ) ) or ( ( aktuelles_zeichen >= 'A' ) and ( aktuelles_zeichen <= 'Z' ) ) or ( ( aktuelles_zeichen >= '0' ) and ( aktuelles_zeichen <= '9' ) ) ):
+                ()
+                # OK
+            
+            elif ( ( aktuelles_zeichen == ' ' ) or ( aktuelles_zeichen == '(' ) or ( aktuelles_zeichen == ')' ) or ( aktuelles_zeichen == '\"' ) ):
+                ()
+                # OK ... eventuell weitere Zeichen hier zulaessig, welche zu ergaenzen waeren
+            
+            elif ( aktuelles_zeichen == '\\' ):
+
+                '''
+                Maskiertes Zeichen 
+                Der Leseprozess muss noch das naechste Zeichen pruefen. 
+                Der Leseprozessindex wird um ein Zeichen weiter gestellt.
+                '''
+                temp_index += 1
+
+                '''
+                Pruefung: Stringende ?
+                '''
+                if ( temp_index == display_string_pos_end ):
+                    return 83 # String: Escape-Zeichen nicht am Ende der Eingabe
+
+                '''
+                Zeichen nach dem Backslash lesen. 
+                Das Zeichen darf ein Backslash oder ein Anfuehrungszeichen sein. 
+                Alle anderen Zeichen fuehren zum Fehler 84.
+                '''
+                aktuelles_zeichen = pEingabe[ temp_index ]
+
+                if ( ( aktuelles_zeichen != '\\' ) and ( aktuelles_zeichen != '@' ) and ( aktuelles_zeichen != ' ' ) and ( aktuelles_zeichen != '\'' ) and ( aktuelles_zeichen != '\"' ) ):
+                    return 84 # String: Ungueltige Escape-Sequenz im String
+                
+            else:
+                # print( f"Fehler Display String Zeichen {aktuelles_zeichen} " );
+
+                return 18 # Struktur: Fehler: Falsches Zeichen im Display String
+            
+
+            temp_index += 1      
+
+            '''
+            Restaurierung der Vorgabewerte
+            Die temporaer fuer andere Zwecke verwendeten Variablen, werden wieder auf deren 
+            Vorgabewerte von -1 gestellt, damit die eigentliche Pruefroutine korrekt arbeitet.
+            '''
+            position_letzter_punkt = -1
+            position_kommentar_ende = -1
+
+
+
     email_local_part_start = 0
     email_domain_part_ende = laenge_eingabe_string - 1
 
@@ -89,7 +333,9 @@ def validateEmail( pEingabe = '' ):
     Zeichen der eMail-Adresse. Dieses um mit der bisherigen Variablenbezeichnung 
     konform zu sein, welches die Laenge des Eingabestrings war. 
     '''
-    zeichen_zaehler = laenge_eingabe_string - akt_index
+    zeichen_zaehler =  ( email_adress_end - email_adress_start ) + 1
+
+    #zeichen_zaehler = laenge_eingabe_string - akt_index
 
     '''
     http://de.wikipedia.org/wiki/E-Mail-Adresse
@@ -163,6 +409,8 @@ def validateEmail( pEingabe = '' ):
         return 12 # Laenge: Laengenbegrenzungen stimmen nicht
 
     email_local_part_gesamt_start = akt_index
+    
+    email_local_part_start = email_adress_start
     
     '''
     While-Schleife 1
@@ -1763,7 +2011,7 @@ def validateEmail( pEingabe = '' ):
                 if ( pEingabe[ akt_index + 1 ] == ' ' ):
           
                     '''
-                    aktuelles Zeichen konsumieren, bzw. Lespositon 1 weiterstellen
+                    aktuelles Zeichen konsumieren, bzw. Leseposition 1 weiterstellen
                     '''
                     akt_index += 1
 
@@ -1799,7 +2047,7 @@ def validateEmail( pEingabe = '' ):
             if ( ( aktuelles_zeichen == ' ' ) and ( position_at_zeichen > 0 ) ):
             
                 '''
-                aktuelles Zeichen konsumieren, bzw. Lespositon 1 weiterstellen
+                aktuelles Zeichen konsumieren, bzw. Leseposition 1 weiterstellen
                 '''
                 akt_index += 1
 
@@ -1934,7 +2182,7 @@ def validateEmail( pEingabe = '' ):
     return fkt_ergebnis_email_ok
 
 # Funktion assertIsTrue
-def assertIsTrue( pInput=''):
+def assertIsTrue( pInput='' ):
     
     knz_is_valid_email_adress = validateEmail( pInput )
     
@@ -1943,7 +2191,7 @@ def assertIsTrue( pInput=''):
     else:
         print(f'assertIsTrue  #### Fehler {knz_is_valid_email_adress} #### "{pInput}" ')
         
-def assertIsFalse(  pInput=''):
+def assertIsFalse(  pInput='' ):
     
     knz_is_valid_email_adress = validateEmail( pInput )
     
@@ -1961,6 +2209,7 @@ def runTestCorrect():
             
     wlHeadline( "Correct" )
 
+    assertIsFalse( "n@d.t" )
     assertIsTrue( "n@d.td" )
     assertIsTrue( "1@2.td" )
     assertIsTrue( "12.345@678.90.tld" )
@@ -3234,9 +3483,76 @@ def runTestUnsortet():
     assertIsTrue( "email.with.at.sign.in.commet2@domain.com (@)" )
     assertIsTrue( "email.with.at.sign.in.commet3@domain.com (.@)" )
 
-runTestCorrect()
+def runTestDisplayName():
+    
+    wlHeadline( "Display Name" )
+
+    assertIsTrue( "ABC DEF <ABC.DEF@GHI.JKL>" )
+    assertIsTrue( "<ABC.DEF@GHI.JKL> ABC DEF" )
+    assertIsFalse( "ABC DEF ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<ABC.DEF@GHI.JKL ABC DEF" )
+    assertIsTrue( "\"ABC DEF \"<ABC.DEF@GHI.JKL>" )
+    assertIsTrue( "\"ABC<DEF>\"@JKL.DE" )
+    assertIsTrue( "\"ABC<DEF@GHI.COM>\"@JKL.DE" )
+    assertIsFalse( "ABC DEF <ABC.<DEF@GHI.JKL>" )
+    assertIsFalse( "<ABC.DEF@GHI.JKL> MNO <PQR.STU@VW.XYZ>" )
+    assertIsFalse( "ABC DEF <ABC.DEF@GHI.JKL" )
+    assertIsFalse( "ABC.DEF@GHI.JKL> ABC DEF" )
+    assertIsFalse( "ABC DEF >ABC.DEF@GHI.JKL<" )
+    assertIsFalse( ">ABC.DEF@GHI.JKL< ABC DEF" )
+    assertIsFalse( "ABC DEF <A@A>" )
+    assertIsFalse( "<A@A> ABC DEF" )
+    assertIsFalse( "ABC DEF <>" )
+    assertIsFalse( "<> ABC DEF" )
+    assertIsFalse( "<" )
+    assertIsFalse( ">" )
+    assertIsFalse( "<         >" )
+    assertIsFalse( "< <     > >" )
+    assertIsTrue( "<ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<.ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<ABC.DEF@GHI.JKL.>" )
+
+    assertIsTrue( "<-ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<ABC.DEF@GHI.JKL->" )
+
+    assertIsTrue( "<_ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<ABC.DEF@GHI.JKL_>" )
+
+    assertIsTrue( "<(Comment)ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<(Comment).ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<.(Comment)ABC.DEF@GHI.JKL>" )
+    assertIsTrue( "<(Comment)-ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<-(Comment)ABC.DEF@GHI.JKL>" )
+    assertIsTrue( "<(Comment)_ABC.DEF@GHI.JKL>" )
+    assertIsFalse( "<_(Comment)ABC.DEF@GHI.JKL>" )
+
+    assertIsTrue( "Joe Smith <email@domain.com>" )
+    assertIsFalse( "Joe Smith <mailto:email@domain.com>" )
+    assertIsFalse( "Joe Smith <mailto:email(with comment)@domain.com>" )
+    assertIsTrue( "Non EMail part <(comment)Local.\"Part\"@[IPv6::ffff:127.0.0.1]>" )
+    assertIsTrue( "Non EMail part <Local.\"Part\"(comment)@[IPv6::ffff:127.0.0.1]>" )
+    assertIsTrue( "<(comment)Local.\"Part\"@[IPv6::ffff:127.0.0.1]> Non EMail part" )
+    assertIsTrue( "<Local.\"Part\"(comment)@[IPv6::ffff:127.0.0.1]> Non EMail part " )
+    assertIsFalse( "Non EMail part < (comment)Local.\"Part\"@[IPv6::ffff:127.0.0.1]>" )
+    assertIsFalse( "Non EMail part <Local.\"Part\"(comment)B@[IPv6::ffff:127.0.0.1]>" )
+    assertIsFalse( "< (comment)Local.\"Part\"@[IPv6::ffff:127.0.0.1]> Non EMail part" )
+    assertIsFalse( "<Local.\"Part\"(comment)B@[IPv6::ffff:127.0.0.1]> Non EMail part " )
+    assertIsFalse( "Test |<gaaf <email@domain.com>" )
+    assertIsFalse( "Display Name <email@plus.com> (Comment after name with display)" )
+    assertIsFalse( "\"With extra < within quotes\" Display Name<email@domain.com>" )
+    assertIsFalse( "<null>@mail.com" )
+
+    assertIsFalse( "email.adress@domain.com <display name>" )
+    assertIsFalse( "email.adress@domain.com <email.adress@domain.com>" )
+    assertIsFalse( "display.name@false.com <email.adress@correct.com>" )
+    assertIsFalse( "<email>.<adress>@domain.com" )
+    assertIsFalse( "<email>.<adress> email.adress@domain.com" )
+
+    
 runTestAtSign()
 runTestSeperator()
 runTestIP4()
 runTestIP6()
 runTestUnsortet()
+runTestDisplayName()
+runTestCorrect()
