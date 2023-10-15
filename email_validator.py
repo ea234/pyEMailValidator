@@ -164,10 +164,6 @@ def validateEmail( pEingabe = '' ):
         '''
         display_string_pos_start = 0
         display_string_pos_end = akt_index
-        
-        email_adress_start = akt_index
-        email_adress_end = laenge_eingabe_string 
-
 
         '''
         Der aktuelle Index steht nun auf der Position der oeffnenden eckigen Klammer. 
@@ -175,6 +171,14 @@ def validateEmail( pEingabe = '' ):
         um ein Zeichen weiter gestellt. (Ausserdem Fehlervermeidung Nr. 22 )
         '''
         akt_index += 1
+        
+        #if ( akt_index == 0 ):
+        #    akt_index = 1
+
+        email_adress_start = akt_index
+        email_adress_end = laenge_eingabe_string 
+
+
 
     else:
 
@@ -3556,3 +3560,4 @@ runTestIP6()
 runTestUnsortet()
 runTestDisplayName()
 runTestCorrect()
+
